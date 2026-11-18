@@ -1,0 +1,39 @@
+services:
+
+  restaurant-service:
+    build:
+      context: ./restaurant-service
+    container_name: restaurant-service
+    ports:
+      - "3001:3001"
+    networks:
+      - food-network
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3001/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  order-service:
+    build:
+      context: ./order-service
+    container_name: order-service
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      RESTAURANT_SERVICE_URL: http://restaurant-service:3001
+    networks:
+      - food-network
+    depends_on:
+      restaurant-service:
+        condition: service_healthy
+
+networks:
+  food-network:
+    driver: bridge
