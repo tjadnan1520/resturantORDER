@@ -104,15 +104,8 @@ app.post("/orders", async (req, res) => {
         });
     }
 
-    const idempotencyKey = req.get("Idempotency-Key");
-
-    if (!idempotencyKey) {
-        return res.status(400).json({
-            success: false,
-            message: "Idempotency-Key is required",
-            requestId: req.requestId
-        });
-    }
+    // Optional: if the client sends no key, generate one (no duplicate protection then)
+    const idempotencyKey = req.get("Idempotency-Key") || crypto.randomUUID();
 
     const existing = idempotencyStore.get(idempotencyKey);
 
